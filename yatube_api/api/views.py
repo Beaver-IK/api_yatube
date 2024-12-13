@@ -1,5 +1,5 @@
-from api_posts.permissions import IsOwnerOrReadOnly
-from api_posts.serializers import (CommentSerializer, GroupSerializer,
+from api.permissions import IsOwnerOrReadOnly
+from api.serializers import (CommentSerializer, GroupSerializer,
                                    PostSerializer)
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
