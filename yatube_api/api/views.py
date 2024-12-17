@@ -1,29 +1,15 @@
-from api.permissions import IsOwnerOrReadOnly
-from api.serializers import (CommentSerializer, GroupSerializer,
-                             PostSerializer)
+from django.shortcuts import get_object_or_404
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.response import Response
 
 from posts.models import Comment, Group, Post
+from api.permissions import IsOwnerOrReadOnly
+from api.serializers import CommentSerializer, GroupSerializer, PostSerializer
 
 
-class BaseVievSet(viewsets.ModelViewSet):
-    """Базовый вьюсет."""
-
-    def update(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.author != request.user:
-            return Response({
-                'detail': 'У вас нет прав на редактирование'})
-        return super().update(request, *args, **kwargs)
-
-    def portial_update(self, request, *args, **kwargs):
-        obj = self.get_object()
-        if obj.author != request.user:
-            return Response({
-                'detail': 'У вас нет прав на редактирование'})
-        return super().update(request, *args, **kwargs)
+def post(id):
+    post = get_object_or_404(Post, id=id)
+    return post
 
 
 class PostViewSet(viewsets.ModelViewSet):
@@ -50,10 +36,12 @@ class CommentViewSet(viewsets.ModelViewSet):
     serializer_class = CommentSerializer
     permission_classes = (IsAuthenticated, IsOwnerOrReadOnly,)
 
+    def get_post(self):
+        post = get_object_or_404(Post, id=self.kwargs['post_id'])
+        return post
+
     def get_queryset(self):
-        post_id = self.kwargs['post_id']
-        return Comment.objects.filter(post_id=post_id)
+        return Comment.objects.filter(post=self.get_post())
 
     def perform_create(self, serializer):
-        post = Post.objects.get(pk=self.kwargs['post_id'])
-        serializer.save(post=post, author=self.request.user)
+        serializer.save(post=self.get_post(), author=self.request.user)
